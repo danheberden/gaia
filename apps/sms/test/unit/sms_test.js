@@ -903,4 +903,50 @@ suite('SMS App Unit-Test', function() {
       }, 30);
     });
   });
+
+  suite('Message Composition', function() {
+
+    var form;
+    var message;
+    setup(function(done) {
+      form = ThreadUI.compose.dom.form;
+      message = ThreadUI.compose.dom.message;
+      done();
+    });
+    suite('Placeholder', function() {
+      test('Placeholder present by default', function(done) {
+        assert.isTrue(message.classList.contains('placeholder'), 'added');
+        done();
+      });
+      test('Placeholder removed on input resulting in content', function(done) {
+        ThreadUI.compose.append('text');
+        assert.isFalse(message.classList.contains('placeholder'), 'removed');
+        done();
+      });
+      test('Placeholder present on input resulting in empty', function(done) {
+        ThreadUI.compose.clear();
+        assert.isTrue(message.classList.contains('placeholder'), 'readded');
+        done();
+      });
+    });
+
+    suite('Message', function() {
+      test('Just text (missing tests)', function(done) {
+        done();
+      });
+      test('Just attachment (missing tests)', function(done) {
+        done();
+      });
+    });
+
+    suite('Attachment', function() {
+      test('Adding creates div.attachment (missing tests)', function(done) {
+        done();
+      });
+      test('Deleting div removes attachment (missing tests)', function(done) {
+        done();
+      });
+    });
+  });
 });
+

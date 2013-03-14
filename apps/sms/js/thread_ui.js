@@ -1110,49 +1110,56 @@ ThreadUI.compose = (function() {
 
   var placeholding = false;
   var htmlTrim = /^(<br\/?>|\s)*|(<br\/?>|\s)*$/ig;
-  var form;
-  var message;
-  var button;
-  var style;
 
-  var check = function() {
+  var dom = {
+    form: undefined,
+    message: undefined,
+    button: undefined
+  };
+
+  var check = function(e) {
     // div[contentEditable] will end up with <br>
-    var content = message.innerHTML.replace(htmlTrim, '');
-    if (message.classList.contains(placeholderClass) && content.length > 0) {
-      message.classList.remove(placeholderClass);
+    var content = dom.message.innerHTML.replace(htmlTrim, '');
+    var placeholding = dom.message.classList.contains(placeholderClass);
+    if (placeholding && content.length > 0) {
+      dom.message.classList.remove(placeholderClass);
       compose.disable(false);
     }
-    if (!message.classList.contains(placeholderClass) && content.length < 1) {
-      message.classList.add(placeholderClass);
-      message.innerHTML = content;
+    if (!placeholding && content.length < 1) {
+      dom.message.classList.add(placeholderClass);
+      dom.message.innerHTML = content;
       compose.disable(true);
     }
 
     // TODO: remove this; failsafe for current code
-    message.value = message.textContent;
+    dom.message.value = dom.message.textContent;
   };
 
   var compose = {
     init: function thui_compose_init() {
-      form = document.getElementById(formId);
-      message = form.querySelector('[contentEditable]');
-      button = form.querySelector('button');
+      dom.form = document.getElementById(formId);
+      dom.message = dom.form.querySelector('[contentEditable]');
+      dom.button = dom.form.querySelector('button');
 
       // update the placeholder after input
-      message.addEventListener('input', check);
+      dom.message.addEventListener('input', check);
       check();
-
-      // TODO: remove this; failsafe for current code
-      this.sendButton = button;
-      this.input = message;
-      this.sendForm = form;
     },
     getMessage: function() {
-      return message.innerHTML;
+      return dom.message.innerHTML;
     },
     disable: function(state) {
-      button.disabled = state;
-    }
+      dom.button.disabled = state;
+    },
+    append: function(data) {
+      dom.message.innerHTML += data;
+      dom.message.dispatchEvent(new Event('input'));
+    },
+    clear: function() {
+      dom.message.innerHTML = '';
+      dom.message.dispatchEvent(new Event('input'));
+    },
+    dom: dom
   };
   return compose;
 }());
