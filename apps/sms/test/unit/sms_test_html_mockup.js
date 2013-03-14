@@ -93,10 +93,8 @@ function renderThreadMsgEdit() {
 
 function renderThreadMsgInputBar() {
   return '<button id="messages-send-button" disabled data-l10n-id="send"' +
-            ' type="submit">Send</button>' +
-          '<p>' +
-            '<textarea type="text" id="messages-input"' +
-              ' name="messages-input" placeholder="Message"' +
-              ' data-l10n-id="composeMessage"></textarea>' +
-          '</p>';
+              ' type="submit">Send</button>' +
+            '<div id="messages-input" contentEditable="true"' +
+              ' name="message" placeholder="Message"' +
+              ' data-l10n-id="composeMessage"></div>';
 }

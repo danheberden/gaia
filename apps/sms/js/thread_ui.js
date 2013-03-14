@@ -11,6 +11,8 @@ var ThreadUI = {
   init: function thui_init() {
     var _ = navigator.mozL10n.get;
 
+    this.compose.init();
+
     [
       'container',
       'header-text', 'recipient', 'input', 'compose-form',
@@ -21,6 +23,7 @@ var ThreadUI = {
     ].forEach(function(id) {
       this[Utils.camelCase(id)] = document.getElementById('messages-' + id);
     }, this);
+
 
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozSms` API
@@ -270,7 +273,7 @@ var ThreadUI = {
     var buttonHeight = 30;
 
     // Retrieve elements useful in growing method
-    var bottomBar = document.getElementById('messages-compose-form');
+    var bottomBar = this.composeForm;
 
     // Updating the height if scroll is bigger that height
     // This is when we have reached the header (UX requirement)
@@ -1095,6 +1098,64 @@ var ThreadUI = {
 };
 
 window.confirm = window.confirm; // allow override in unit tests
+
+/**
+ * Handle UI specifics of message composition. Namely,
+ * resetting (auto manages placeholder text), getting
+ * message content, and message size
+ */
+ThreadUI.compose = (function() {
+  var formId = 'messages-compose-form';
+  var placeholderClass = 'placeholder';
+
+  var placeholding = false;
+  var htmlTrim = /^(<br\/?>|\s)*|(<br\/?>|\s)*$/ig;
+  var form;
+  var message;
+  var button;
+  var style;
+
+  var check = function() {
+    // div[contentEditable] will end up with <br>
+    var content = message.innerHTML.replace(htmlTrim, '');
+    if (message.classList.contains(placeholderClass) && content.length > 0) {
+      message.classList.remove(placeholderClass);
+      compose.disable(false);
+    }
+    if (!message.classList.contains(placeholderClass) && content.length < 1) {
+      message.classList.add(placeholderClass);
+      message.innerHTML = content;
+      compose.disable(true);
+    }
+
+    // TODO: remove this; failsafe for current code
+    message.value = message.textContent;
+  };
+
+  var compose = {
+    init: function thui_compose_init() {
+      form = document.getElementById(formId);
+      message = form.querySelector('[contentEditable]');
+      button = form.querySelector('button');
+
+      // update the placeholder after input
+      message.addEventListener('input', check);
+      check();
+
+      // TODO: remove this; failsafe for current code
+      this.sendButton = button;
+      this.input = message;
+      this.sendForm = form;
+    },
+    getMessage: function() {
+      return message.innerHTML;
+    },
+    disable: function(state) {
+      button.disabled = state;
+    }
+  };
+  return compose;
+}());
 
 window.addEventListener('resize', function resize() {
   ThreadUI.setInputMaxHeight();

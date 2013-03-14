@@ -476,10 +476,18 @@ form.bottom[role="search"].messages-compose-form {
   top: -0.2rem;
 }
 
-#messages-input {
+#messages-compose-form [contentEditable] {
   padding: 0.4rem 0.2rem 0.2rem 0.6rem;
   line-height: 1.8rem !important;
   font-size: 1.8rem;
+  min-height: 1.8rem;
+  text-align: left;
+  /* Cursor hides itself otherwise: */
+  overflow: auto;
+}
+#messages-compose-form .placeholder[contentEditable]::after {
+  color: #666;
+  content: attr(placeholder)
 }
 
 #send-message-container {
