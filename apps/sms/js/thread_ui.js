@@ -1109,7 +1109,7 @@ ThreadUI.compose = (function() {
   var placeholderClass = 'placeholder';
 
   var placeholding = false;
-  var htmlTrim = /^(<br\/?>|\s)*|(<br\/?>|\s)*$/ig;
+  var attachments = new WeakMap();
 
   var dom = {
     form: undefined,
@@ -1118,16 +1118,22 @@ ThreadUI.compose = (function() {
   };
 
   var check = function(e) {
-    // div[contentEditable] will end up with <br>
-    var content = dom.message.innerHTML.replace(htmlTrim, '');
+    var empty = !dom.message.textContent.length;
+    if (empty) {
+      var brs = dom.message.querySelectorAll('br');
+      var attachments = dom.message.querySelectorAll('iframe');
+      // firefox will keep an extra <br> in there
+      if (brs.length > 1 || attachments.length > 0) {
+        empty = false;
+      }
+    }
     var placeholding = dom.message.classList.contains(placeholderClass);
-    if (placeholding && content.length > 0) {
+    if (placeholding && !empty) {
       dom.message.classList.remove(placeholderClass);
       compose.disable(false);
     }
-    if (!placeholding && content.length < 1) {
+    if (!placeholding && empty) {
       dom.message.classList.add(placeholderClass);
-      dom.message.innerHTML = content;
       compose.disable(true);
     }
 
@@ -1145,15 +1151,52 @@ ThreadUI.compose = (function() {
       dom.message.addEventListener('input', check);
       check();
     },
-    getMessage: function() {
-      return dom.message.innerHTML;
+    getContent: function() {
+      var content = [];
+      var lastContent = null;
+
+      [].forEach.call(dom.message.childNodes, function(node) {
+        // hunt for an attachment in the WeakMap and append it
+        var attachment = attachments.get(node);
+        if (attachment) {
+          lastContent = content.push(attachment);
+          return;
+        }
+
+        var last = content.length - 1;
+        var text = node.textContent;
+        // append (if possible) text to the last entry
+        if (text.length > 0 && typeof content[last] === 'string') {
+          content[last] += text;
+        } else {
+          content.push(text);
+        }
+
+        // keep track of the last populated line
+        if (text !== '') {
+          lastContent = content.length;
+        }
+      });
+      // trim away any trailing empty lines
+      return content.slice(0, lastContent);
     },
     disable: function(state) {
       dom.button.disabled = state;
     },
     append: function(data) {
-      dom.message.innerHTML += data;
+      var container = document.createElement('div');
+      container.innerHTML = data;
+      [].forEach.call(container.childNodes, function(node) {
+        dom.message.appendChild(node);
+      });
       dom.message.dispatchEvent(new Event('input'));
+    },
+    attach: function(attachment) {
+      var el = attachment.render();
+      attachments.set(el, attachment);
+      dom.message.appendChild(el);
+      dom.message.dispatchEvent(new Event('input'));
+      ThreadUI.updateInputHeight();
     },
     clear: function() {
       dom.message.innerHTML = '';

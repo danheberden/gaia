@@ -19,6 +19,7 @@ requireApp('sms/test/unit/messages_mockup.js');
 requireApp('sms/test/unit/sms_test_html_mockup.js');
 requireApp('sms/test/unit/thread_list_mockup.js');
 requireApp('sms/js/message_manager.js');
+requireApp('sms/js/attachment.js');
 requireApp('sms/js/thread_list_ui.js');
 requireApp('sms/js/thread_ui.js');
 requireApp('sms/js/waiting_screen.js');
@@ -906,10 +907,8 @@ suite('SMS App Unit-Test', function() {
 
   suite('Message Composition', function() {
 
-    var form;
     var message;
     setup(function(done) {
-      form = ThreadUI.compose.dom.form;
       message = ThreadUI.compose.dom.message;
       done();
     });
@@ -928,22 +927,157 @@ suite('SMS App Unit-Test', function() {
         assert.isTrue(message.classList.contains('placeholder'), 'readded');
         done();
       });
+      test('Placeholder removed on input of attachment', function(done) {
+        var attachment = new Attachment('image',
+                       '/test/unit/media/IMG_0554.jpg', '12345');
+        ThreadUI.compose.attach(attachment);
+        var txt = ThreadUI.compose.getContent();
+        var contains = message.classList.contains('placeholder');
+        // clearing to remove the iframe so that mocha doesn't
+        // get alarmed at window[0] pointing to the iframe
+        ThreadUI.compose.clear();
+        assert.isFalse(contains, 'removed');
+        done();
+      });
+      teardown(function() {
+        ThreadUI.compose.clear();
+      });
     });
 
-    suite('Message', function() {
-      test('Just text (missing tests)', function(done) {
+    suite('Clearing Message', function() {
+      setup(function(done) {
+        ThreadUI.compose.clear();
         done();
       });
-      test('Just attachment (missing tests)', function(done) {
+
+      test('Clear removes text', function(done) {
+        ThreadUI.compose.append('start');
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt.length, 1, 'One line in the txt');
+        ThreadUI.compose.clear();
+        txt = ThreadUI.compose.getContent();
+        assert.equal(txt.length, 0, 'No lines in the txt');
+        done();
+      });
+      test('Clear removes attachment', function(done) {
+        var attachment = new Attachment('image',
+                       '/test/unit/media/IMG_0554.jpg', '12345');
+        ThreadUI.compose.attach(attachment);
+        var txt = ThreadUI.compose.getContent();
+        // clearing to remove the iframe so that mocha doesn't
+        // get alarmed at window[0] pointing to the iframe
+        ThreadUI.compose.clear();
+        assert.equal(txt.length, 1, 'One line in txt');
+        ThreadUI.compose.clear();
+        txt = ThreadUI.compose.getContent();
+        assert.equal(txt.length, 0, 'No lines in the txt');
         done();
       });
     });
 
-    suite('Attachment', function() {
-      test('Adding creates div.attachment (missing tests)', function(done) {
+    suite('Getting Message via getContent()', function() {
+      setup(function(done) {
+        ThreadUI.compose.clear();
         done();
       });
-      test('Deleting div removes attachment (missing tests)', function(done) {
+      test('Just text - simple', function(done) {
+        ThreadUI.compose.append('start');
+        ThreadUI.compose.append('end');
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt.length, 1, 'One line in the txt');
+        assert.equal(txt[0], 'startend', 'resulting txt ok');
+        done();
+      });
+      test('Just text - line breaks', function(done) {
+        ThreadUI.compose.append('start');
+        ThreadUI.compose.append('<br>');
+        ThreadUI.compose.append('end');
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt.length, 2, 'Two lines in txt');
+        assert.equal(txt[0], 'start', 'first line is isolated');
+        assert.equal(txt[1], 'end', 'last line is isolated');
+        done();
+      });
+      test('Trailing line breaks stripped', function(done) {
+        ThreadUI.compose.append('start');
+        ThreadUI.compose.append('<br>');
+        ThreadUI.compose.append('end');
+        ThreadUI.compose.append(new Array(20).join('<br>'));
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt.length, 2, 'Two lines in txt');
+        assert.equal(txt[0], 'start', 'first line is isolated');
+        assert.equal(txt[1], 'end', 'last line is isolated');
+        done();
+      });
+      test('Just attachment', function(done) {
+        var attachment = new Attachment('image',
+                       '/test/unit/media/IMG_0554.jpg', '12345');
+        ThreadUI.compose.attach(attachment);
+        var txt = ThreadUI.compose.getContent();
+        // clearing to remove the iframe so that mocha doesn't
+        // get alarmed at window[0] pointing to the iframe
+        ThreadUI.compose.clear();
+        assert.equal(txt.length, 1, 'One line in txt');
+        assert.ok(txt[0] instanceof Attachment, 'Sub 0 is an attachment');
+        done();
+      });
+      test('Attachment in middle of text', function(done) {
+        var attachment = new Attachment('image',
+                       '/test/unit/media/IMG_0554.jpg', '54321');
+        ThreadUI.compose.append('start');
+        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append('end');
+        var txt = ThreadUI.compose.getContent();
+        // clearing to remove the iframe so that mocha doesn't
+        // get alarmed at window[0] pointing to the iframe
+        ThreadUI.compose.clear();
+        assert.equal(txt.length, 3, 'Three lines in txt');
+        assert.equal(txt[0], 'start', 'First line is start text');
+        assert.ok(txt[1] instanceof Attachment, 'Sub 1 is an attachment');
+        assert.equal(txt[2], 'end', 'Last line is end text');
+        done();
+      });
+      test('attachment with excess breaks', function(done) {
+        var attachment = new Attachment('image',
+                       '/test/unit/media/IMG_0554.jpg', '55555');
+        ThreadUI.compose.append('start');
+        // keep in mind FF will render <br><br> as just one :/
+        ThreadUI.compose.append('<br><br><br><br>');
+        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append('end');
+        var txt = ThreadUI.compose.getContent();
+        // clearing to remove the iframe so that mocha doesn't
+        // get alarmed at window[0] pointing to the iframe
+        ThreadUI.compose.clear();
+        assert.equal(txt.length, 5, 'Three lines in txt');
+        assert.equal(txt[0], 'start', 'First line is start text');
+        assert.ok(txt[3] instanceof Attachment, 'Sub 4 is an attachment');
+        assert.equal(txt[4], 'end', 'Last line is end text');
+        done();
+      });
+      teardown(function() {
+        ThreadUI.compose.clear();
+      });
+    });
+
+    suite('Message Attachment Iframe', function() {
+      setup(function(done) {
+        ThreadUI.compose.clear();
+        done();
+      });
+
+      test('Attaching creates iframe.attachment', function(done) {
+        var attachment = new Attachment('image',
+                       '/test/unit/media/IMG_0554.jpg', '12345');
+        ThreadUI.compose.attach(attachment);
+        var iframes = message.querySelectorAll('iframe');
+        var txt = ThreadUI.compose.getContent();
+        // clearing to remove the iframe so that mocha doesn't
+        // get alarmed at window[0] pointing to the iframe
+        ThreadUI.compose.clear();
+        assert.equal(iframes.length, 1, 'One iframe');
+        assert.ok(iframes[0].classList.contains('attachment'), '.attachment');
+        assert.ok(txt[0] === attachment, 'iframe WeakMap\'d to attachment');
         done();
       });
     });

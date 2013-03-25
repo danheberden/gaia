@@ -11,6 +11,7 @@ var lazyLoadFiles = [
   'js/blacklist.js',
   'js/contacts.js',
   'js/message_manager.js',
+  'js/attachment.js',
   'js/thread_list_ui.js',
   'js/thread_ui.js',
   'js/waiting_screen.js',
