@@ -1150,6 +1150,7 @@ ThreadUI.compose = (function() {
       // update the placeholder after input
       dom.message.addEventListener('input', check);
       check();
+      return this;
     },
     getContent: function() {
       var content = [];
@@ -1182,25 +1183,59 @@ ThreadUI.compose = (function() {
     },
     disable: function(state) {
       dom.button.disabled = state;
+      return this;
     },
-    append: function(data) {
-      var container = document.createElement('div');
-      container.innerHTML = data;
-      [].forEach.call(container.childNodes, function(node) {
-        dom.message.appendChild(node);
-      });
-      dom.message.dispatchEvent(new Event('input'));
-    },
-    attach: function(attachment) {
-      var el = attachment.render();
-      attachments.set(el, attachment);
-      dom.message.appendChild(el);
+    /** Writes node to composition element
+     * @param {mixed} item Html, DOMNode, or attachment to add
+     *                     to composition element.
+     * @param {Boolean} position True to append, false to prepend or
+     *                           undefined/null for auto (at cursor).
+     */
+    insert: function(item, position) {
+
+      var fragment = document.createDocumentFragment();
+
+      if (item instanceof Attachment) {
+        var node = item.render();
+        attachments.set(node, item);
+        fragment.appendChild(node);
+      } else if (item.nodeType) {
+        fragment.appendChild(item);
+      } else {
+        var container = document.createElement('div');
+        container.innerHTML = item;
+        [].forEach.call(container.childNodes, function(node) {
+          fragment.appendChild(node);
+        });
+      }
+
+      if (position === undefined && document.activeElement === dom.message) {
+        var range = window.getSelection().getRangeAt(0);
+        var firstNodes = fragment.childNodes[0];
+        range.deleteContents();
+        range.insertNode(fragment);
+        dom.message.focus();
+        range.setStartAfter(firstNodes);
+      } else if (position === false) {
+        dom.message.insertBefore(fragment, dom.message.childNodes[0]);
+      } else {
+        dom.message.appendChild(fragment);
+      }
+
       dom.message.dispatchEvent(new Event('input'));
       ThreadUI.updateInputHeight();
+      return this;
+    },
+    prepend: function(item) {
+      return this.insert(item, false);
+    },
+    append: function(item) {
+      return this.insert(item, true);
     },
     clear: function() {
       dom.message.innerHTML = '';
       dom.message.dispatchEvent(new Event('input'));
+      return this;
     },
     dom: dom
   };

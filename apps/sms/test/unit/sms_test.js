@@ -913,6 +913,10 @@ suite('SMS App Unit-Test', function() {
       done();
     });
     suite('Placeholder', function() {
+      setup(function(done) {
+        ThreadUI.compose.clear();
+        done();
+      });
       test('Placeholder present by default', function(done) {
         assert.isTrue(message.classList.contains('placeholder'), 'added');
         done();
@@ -930,7 +934,7 @@ suite('SMS App Unit-Test', function() {
       test('Placeholder removed on input of attachment', function(done) {
         var attachment = new Attachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
-        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append(attachment);
         var txt = ThreadUI.compose.getContent();
         var contains = message.classList.contains('placeholder');
         // clearing to remove the iframe so that mocha doesn't
@@ -962,7 +966,7 @@ suite('SMS App Unit-Test', function() {
       test('Clear removes attachment', function(done) {
         var attachment = new Attachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
-        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append(attachment);
         var txt = ThreadUI.compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
         // get alarmed at window[0] pointing to the iframe
@@ -972,6 +976,46 @@ suite('SMS App Unit-Test', function() {
         txt = ThreadUI.compose.getContent();
         assert.equal(txt.length, 0, 'No lines in the txt');
         done();
+      });
+    });
+
+    suite('Message insert, append, prepend', function(done) {
+      test('Message appended', function(done) {
+        ThreadUI.compose.append('start');
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt[0], 'start', 'text is appended');
+        done();
+      });
+      test('Message prepend', function(done) {
+        ThreadUI.compose.append('end');
+        ThreadUI.compose.prepend('start');
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt[0], 'startend', 'text is inserted at beginning');
+        done();
+      });
+      test('Message insert', function(done) {
+        ThreadUI.compose.append('start');
+        // It seems the element can't receive actualy focus
+        // in the test suite to testing caret position and
+        // insertion is impossible.
+        ThreadUI.compose.insert('end');
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt[0], 'startend', 'text is inserted');
+        done();
+      });
+      test('Message insert - DOM node', function(done) {
+        var node = document.createElement('div');
+        node.innerHTML = 'NODE';
+        ThreadUI.compose.append(node);
+        var txt = ThreadUI.compose.getContent();
+        assert.equal(txt[0], 'NODE', 'First line contains "NODE"');
+        done();
+      });
+      test('Message insert - Attachment', function(done) {
+        done();
+      });
+      teardown(function() {
+        ThreadUI.compose.clear();
       });
     });
 
@@ -1012,7 +1056,7 @@ suite('SMS App Unit-Test', function() {
       test('Just attachment', function(done) {
         var attachment = new Attachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
-        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append(attachment);
         var txt = ThreadUI.compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
         // get alarmed at window[0] pointing to the iframe
@@ -1025,7 +1069,7 @@ suite('SMS App Unit-Test', function() {
         var attachment = new Attachment('image',
                        '/test/unit/media/IMG_0554.jpg', '54321');
         ThreadUI.compose.append('start');
-        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append(attachment);
         ThreadUI.compose.append('end');
         var txt = ThreadUI.compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
@@ -1043,7 +1087,7 @@ suite('SMS App Unit-Test', function() {
         ThreadUI.compose.append('start');
         // keep in mind FF will render <br><br> as just one :/
         ThreadUI.compose.append('<br><br><br><br>');
-        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append(attachment);
         ThreadUI.compose.append('end');
         var txt = ThreadUI.compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
@@ -1069,7 +1113,7 @@ suite('SMS App Unit-Test', function() {
       test('Attaching creates iframe.attachment', function(done) {
         var attachment = new Attachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
-        ThreadUI.compose.attach(attachment);
+        ThreadUI.compose.append(attachment);
         var iframes = message.querySelectorAll('iframe');
         var txt = ThreadUI.compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
