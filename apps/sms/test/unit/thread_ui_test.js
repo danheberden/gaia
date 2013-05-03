@@ -4,6 +4,7 @@
 // mocha and when we have that new mocha in test agent
 mocha.setup({ globals: ['alert'] });
 
+requireApp('sms/test/unit/mock_alert.js');
 requireApp('sms/test/unit/mock_l10n.js');
 requireApp('sms/js/utils.js');
 requireApp('sms/test/unit/mock_utils.js');
@@ -104,7 +105,7 @@ suite('thread_ui.js >', function() {
     });
 
     test('button should be enabled when there is some text', function() {
-      input.value = 'Hola';
+      input.innerHTML = 'Hola';
       ThreadUI.enableSend();
       assert.isFalse(sendButton.disabled);
     });
@@ -140,7 +141,7 @@ suite('thread_ui.js >', function() {
       });
 
       test('button should be disabled when there is no contact', function() {
-        input.value = 'Hola';
+        input.innerHTML = 'Hola';
         ThreadUI.enableSend();
         assert.isTrue(sendButton.disabled);
       });
@@ -148,7 +149,7 @@ suite('thread_ui.js >', function() {
       test('button should be enabled when there is both contact and input',
         function() {
 
-        ThreadUI.input.value = 'Hola';
+        input.innerHTML = 'Hola';
         var recipient = ThreadUI.appendEditableRecipient();
         ThreadUI.createRecipient(recipient);
         ThreadUI.enableSend();
@@ -201,10 +202,6 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, '');
       });
 
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
@@ -228,10 +225,6 @@ suite('thread_ui.js >', function() {
 
       test('no counter is displayed', function() {
         assert.equal(sendButton.dataset.counter, '');
-      });
-
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
       });
 
       test('no banner is displayed', function() {
@@ -267,10 +260,6 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
@@ -302,10 +291,6 @@ suite('thread_ui.js >', function() {
       test('a counter is displayed', function() {
         var expected = availableChars + '/' + segment;
         assert.equal(sendButton.dataset.counter, expected);
-      });
-
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
       });
 
       test('no banner is displayed', function() {
@@ -341,10 +326,6 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
@@ -372,10 +353,6 @@ suite('thread_ui.js >', function() {
       test('a counter is displayed', function() {
         var expected = availableChars + '/' + segment;
         assert.equal(sendButton.dataset.counter, expected);
-      });
-
-      test('the user can not enter more characters', function() {
-        assert.equal(input.maxLength, input.value.length);
       });
 
       test('the banner is displayed', function() {
@@ -410,22 +387,6 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-      test('the user can not enter more characters', function() {
-        assert.equal(input.maxLength, input.value.length);
-      });
-
-      test('the banner is displayed', function() {
-        assert.isFalse(banner.classList.contains('hide'));
-      });
-
-      test('the banner has the exceeded length message', function() {
-        var actual = banner.querySelector('p').textContent;
-        assert.equal(actual, 'messages-exceeded-length-text');
-      });
-
-      test('the send button should be disabled', function() {
-        assert.isFalse(shouldEnableSend);
-      });
     });
   });
 
