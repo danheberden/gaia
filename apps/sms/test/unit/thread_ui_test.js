@@ -7,6 +7,7 @@ mocha.setup({ globals: ['alert'] });
 requireApp('sms/test/unit/mock_alert.js');
 requireApp('sms/test/unit/mock_l10n.js');
 requireApp('sms/js/utils.js');
+requireApp('sms/js/compose.js');
 requireApp('sms/test/unit/mock_utils.js');
 requireApp('sms/test/unit/mock_navigatormoz_sms.js');
 requireApp('sms/test/unit/mock_link_helper.js');
@@ -96,17 +97,21 @@ suite('thread_ui.js >', function() {
 
   suite('enableSend() >', function() {
     setup(function() {
+      Compose.clear();
       ThreadUI.updateCounter();
     });
 
+    teardown(function() {
+      Compose.clear();
+    });
+
     test('button should be disabled at the beginning', function() {
-      ThreadUI.enableSend();
+      Compose.clear();
       assert.isTrue(sendButton.disabled);
     });
 
     test('button should be enabled when there is some text', function() {
-      input.innerHTML = 'Hola';
-      ThreadUI.enableSend();
+      Compose.append('Hola');
       assert.isFalse(sendButton.disabled);
     });
 
@@ -127,32 +132,35 @@ suite('thread_ui.js >', function() {
     suite('#new mode >', function() {
       setup(function() {
         window.location.hash = '#new';
+        Compose.clear();
+        ThreadUI.recipients.length = 0;
       });
 
       teardown(function() {
         window.location.hash = '';
+        Compose.clear();
+        ThreadUI.recipients.length = 0;
       });
 
       test('button should be disabled when there is neither contact or input',
         function() {
+        Compose.clear();
 
-        ThreadUI.enableSend();
         assert.isTrue(sendButton.disabled);
       });
 
       test('button should be disabled when there is no contact', function() {
-        input.innerHTML = 'Hola';
-        ThreadUI.enableSend();
+        Compose.append('Hola');
+        console.log(sendButton.disabled);
         assert.isTrue(sendButton.disabled);
       });
 
       test('button should be enabled when there is both contact and input',
         function() {
+        Compose.append('Hola');
 
-        input.innerHTML = 'Hola';
         var recipient = ThreadUI.appendEditableRecipient();
         ThreadUI.createRecipient(recipient);
-        ThreadUI.enableSend();
         assert.isFalse(sendButton.disabled);
       });
 
@@ -164,11 +172,9 @@ suite('thread_ui.js >', function() {
           segments: 11,
           charsAvailableInLastSegment: 10
         };
-        ThreadUI.input.value = 'Hola';
+        Compose.append('Hola');
         var recipient = ThreadUI.appendEditableRecipient();
         ThreadUI.createRecipient(recipient);
-
-        ThreadUI.enableSend();
 
         assert.isTrue(sendButton.disabled);
       });
@@ -193,7 +199,7 @@ suite('thread_ui.js >', function() {
         banner.classList.remove('hide');
 
         // add a maxlength to check that it is correctly removed
-        input.setAttribute('maxlength', 25);
+        Compose.setMaxLength(25);
 
         shouldEnableSend = ThreadUI.updateCounter();
       });
@@ -218,7 +224,7 @@ suite('thread_ui.js >', function() {
         banner.classList.remove('hide');
 
         // add a maxlength to check that it is correctly removed
-        input.setAttribute('maxlength', 25);
+        Compose.setMaxLength(25);
 
         shouldEnableSend = ThreadUI.updateCounter();
       });
@@ -250,7 +256,7 @@ suite('thread_ui.js >', function() {
         banner.classList.remove('hide');
 
         // add a maxlength to check that it is correctly removed
-        input.setAttribute('maxlength', 25);
+        Compose.setMaxLength(25);
 
         shouldEnableSend = ThreadUI.updateCounter();
       });
@@ -283,7 +289,7 @@ suite('thread_ui.js >', function() {
         banner.classList.remove('hide');
 
         // add a maxlength to check that it is correctly removed
-        input.setAttribute('maxlength', 25);
+        Compose.setMaxLength(25);
 
         shouldEnableSend = ThreadUI.updateCounter();
       });
@@ -316,7 +322,7 @@ suite('thread_ui.js >', function() {
         banner.classList.remove('hide');
 
         // add a maxlength to check that it is correctly removed
-        input.setAttribute('maxlength', 25);
+        Compose.setMaxLength(25);
 
         shouldEnableSend = ThreadUI.updateCounter();
       });

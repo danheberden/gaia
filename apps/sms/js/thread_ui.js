@@ -397,7 +397,6 @@ var ThreadUI = global.ThreadUI = {
     var goBack = (function() {
       this.stopRendering();
       if (Compose.isEmpty()) {
-        console.log('empty!');
         window.location.hash = '#thread-list';
         return;
       }

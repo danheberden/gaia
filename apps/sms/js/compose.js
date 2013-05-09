@@ -36,7 +36,7 @@ var Compose = (function() {
     var textLength = dom.message.textContent.length;
     var empty = !textLength;
 
-    if (state.maxLength && textContent.length >= state.maxLength) {
+    if (state.maxLength && textLength >= state.maxLength) {
       state.lock = true;
     }
 
